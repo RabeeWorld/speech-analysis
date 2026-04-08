@@ -35,8 +35,7 @@ speech-analysis/
 │   ├── visualization.py
 │   └── main.py
 │
-├── plots/                 # Generated graphs
-├── results/               # Output files
+├── plots/                 # Generated graphs              
 ├── requirements.txt
 └── README.md
 ```
