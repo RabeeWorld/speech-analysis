@@ -5,15 +5,15 @@
 This project analyzes a speech audio file to detect:
 
 * ⏸️ **Pause Segments** — Silent regions in speech
-* 🔁 **Repetitions** — Stuttered speech patterns such as "ba-ba-ball" or "I-I-I want"
+* 🔁 **Repetitions** — Stuttered patterns such as *"ba-ba-ball"* or *"I-I-I want"*
 
-The system is designed with a modular pipeline that processes audio, extracts meaningful features, and applies detection logic to produce structured results.
+The goal is to design a clear and explainable pipeline using signal processing techniques rather than focusing on perfect accuracy.
 
 ---
 
 ## 🧠 Approach
 
-The overall pipeline is:
+The system follows a modular pipeline:
 
 ```
 Audio → Preprocessing → Feature Extraction → Detection → Output + Visualization
@@ -21,18 +21,37 @@ Audio → Preprocessing → Feature Extraction → Detection → Output + Visual
 
 ---
 
+## 📂 Project Structure
+
+```
+speech-analysis/
+│
+├── data/                  # Input audio files
+├── src/                   # Source code
+│   ├── preprocess.py
+│   ├── features.py
+│   ├── pause_detection.py
+│   ├── repetition_detection.py
+│   ├── visualization.py
+│   └── main.py
+│
+├── plots/                 # Generated graphs
+├── results/               # Output files
+├── requirements.txt
+└── README.md
+```
+
+---
+
 ## ⚙️ Audio Preprocessing
 
 * Audio is loaded using `librosa`
+* Normalization is applied to ensure consistent amplitude levels
 
-* Normalization is applied to ensure consistent amplitude:
+This improves:
 
-  → This helps improve reliability of feature extraction and threshold-based detection
-
-* Basic noise robustness is achieved through:
-
-  * RMS-based filtering
-  * Minimum duration constraints
+* Feature extraction reliability
+* Threshold-based detection accuracy
 
 ---
 
@@ -40,91 +59,93 @@ Audio → Preprocessing → Feature Extraction → Detection → Output + Visual
 
 ### 🔹 Pause Detection
 
-* **RMS Energy (Root Mean Square)** is used
+* Uses **RMS Energy (Root Mean Square)**
 * Represents loudness over time
-* Low RMS values indicate silence
+* Low RMS → silence
 
 ---
 
 ### 🔹 Repetition Detection
 
-* **MFCC (Mel-Frequency Cepstral Coefficients)** are used
-* MFCCs are derived from the spectrogram and capture speech characteristics
-* Each audio segment is converted into a compact feature vector
+* Uses **MFCC (Mel-Frequency Cepstral Coefficients)**
+* Derived from spectrogram
+* Captures speech characteristics effectively
 
 ---
 
 ## ⏸️ Pause Detection Logic
 
-1. Audio is divided into frames
-2. RMS energy is computed for each frame
-3. A **dynamic threshold** is used:
+1. Compute RMS energy for audio frames
+2. Apply dynamic threshold:
 
    ```
    threshold = mean(RMS) × factor
    ```
-4. Frames below threshold are considered silent
-5. Consecutive silent frames are grouped into segments
-6. Very short pauses are removed using a **minimum duration filter**
+3. Identify low-energy regions as silence
+4. Group consecutive silent frames
+5. Filter short pauses using minimum duration
 
 ### ✅ Output:
 
-* Start and end time of each pause
+* Start & end time of pauses
 * Total pause duration
 
 ---
 
 ## 🔁 Repetition Detection Logic
 
-### 🔹 Step 1: Segmentation
+### 🔹 1. Segmentation
 
-* Audio is split into **small overlapping segments**
-* Helps capture short stutter patterns
-
----
-
-### 🔹 Step 2: Feature Comparison
-
-* MFCC features are extracted for each segment
-* Cosine similarity is used to compare consecutive segments
-
-```
-Similarity = 1 - cosine distance
-```
-
-* High similarity → possible repetition
+* Audio is split into small overlapping segments
 
 ---
 
-### 🔹 Step 3: Segment Merging
+### 🔹 2. Feature Extraction
 
-* Overlapping repetition detections are merged
-* Avoids duplicate detections
+* MFCC features extracted for each segment
 
 ---
 
-### 🔹 Step 4: Speech-to-Text Enhancement
+### 🔹 3. Similarity Comparison
 
-* Google Speech Recognition API is used to convert audio to text
-* Text is analyzed to detect repetition patterns like:
+* Cosine similarity used:
+
+  ```
+  similarity = 1 - cosine distance
+  ```
+* High similarity → repetition
+
+---
+
+### 🔹 4. Segment Merging
+
+* Overlapping detections are merged
+* Prevents duplicate results
+
+---
+
+### 🔹 5. Speech-to-Text Enhancement
+
+* Converts audio to text using Google Speech API
+* Helps identify repetition patterns like:
 
   * "I-I-I want"
   * "ba-ba-ball"
 
 ---
 
-### 🔹 Step 5: Pattern Detection
+### 🔹 6. Pattern Detection
 
-* Consecutive repeated words are identified
-* Pattern is constructed and repetition count is calculated
+* Detects consecutive repeated words
+* Generates pattern + repetition count
 
 ---
 
 ## 📊 Visualization
 
-* Waveform is plotted using `matplotlib`
-* Pause regions are highlighted for visual understanding
-* Output saved as:
+* Waveform plotted using `matplotlib`
+* Pause regions highlighted
+* Saved as:
 
 ```
 plots/waveform.png
@@ -132,7 +153,7 @@ plots/waveform.png
 
 ---
 
-## 📦 Output Example
+## 📦 Example Output
 
 ```
 Pause Segments:
@@ -148,13 +169,13 @@ Repetition Count: 3
 
 ---
 
-## 🧪 Libraries Used
+## 🧪 Requirements
 
-* `librosa` → audio processing
-* `numpy` → numerical operations
-* `matplotlib` → visualization
-* `scipy` → similarity computation
-* `speech_recognition` → speech-to-text
+Install dependencies:
+
+```
+pip install -r requirements.txt
+```
 
 ---
 
@@ -162,50 +183,36 @@ Repetition Count: 3
 
 ### 🔴 1. Speech Recognition Limitations
 
-* Speech-to-text struggles with stuttering patterns like **"b-b-b-ball"**
-* May return incorrect or incomplete text
-* Performance depends on external API accuracy
+* Struggles with stuttering like "b-b-b-ball"
+* May return incorrect text
 
 ---
 
 ### 🔴 2. Stuttering vs Clean Repetition
 
-* Stuttering is often **irregular and fragmented**, unlike clean repetition
-* Required:
-
-  * Smaller segment sizes
-  * Lower similarity thresholds
-* Increased complexity in detecting true repetition patterns
+* Irregular and fragmented patterns
+* Required smaller segments and tuning
 
 ---
 
 ### 🔴 3. Threshold Sensitivity
 
-* Detection heavily depends on threshold values:
-
-  * High threshold → **missed detections**
-  * Low threshold → **false positives**
-* Required careful tuning for different audio samples
+* High → missed detections
+* Low → false positives
 
 ---
 
 ### 🔴 4. Noise & Audio Quality
 
-* Background noise affects MFCC feature extraction
-* Poor-quality recordings reduce detection accuracy
-* Addressed partially through normalization and filtering
+* Background noise affects MFCC
+* Poor recordings reduce accuracy
 
 ---
 
 ### 🔴 5. Dataset Complexity
 
-* UCLASS dataset contains **real-world imperfect speech**
-* Includes:
+* Real-world imperfect speech (UCLASS dataset)
+* Required tuning for realistic behavior
 
-  * Irregular pauses
-  * Natural stuttering patterns
-* Required tuning to handle realistic and noisy conditions
 
----
-
----
+--
